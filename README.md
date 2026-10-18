@@ -219,6 +219,9 @@ Invoke-RestMethod -Method POST http://127.0.0.1:8000/evaluations/run
 
 ## 演示与追问
 
+- 81 秒页面演示：[WebM](docs/assets/loop-engineering-demo.webm)
 - 演示脚本：`docs/demo-script.md`
 - 面试追问清单：`docs/interview-qa.md`
 - 验证记录：`docs/verification.md`
+
+![演示预览](docs/assets/loop-engineering-preview.gif)
