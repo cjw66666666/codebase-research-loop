@@ -1,3 +1,6 @@
+/**
+ * 风险与开放问题页：展示风险台账，并提交阻塞问题的回答。
+ */
 import { redirect } from "next/navigation";
 import { WorkbenchNav } from "@/components/workbench-nav";
 import { answerProjectQuestion, getProject, getProjectRun, listProjectRuns } from "@/lib/api";

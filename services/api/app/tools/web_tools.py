@@ -1,3 +1,5 @@
+"""网页抓取和可读正文提取工具。"""
+
 from html.parser import HTMLParser
 
 import httpx

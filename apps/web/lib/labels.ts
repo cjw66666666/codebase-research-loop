@@ -1,3 +1,6 @@
+/**
+ * 把后端状态码和枚举值转换为界面统一使用的中文标签。
+ */
 export function statusLabel(value: string | null | undefined): string {
   const labels: Record<string, string> = {
     draft: "草稿",

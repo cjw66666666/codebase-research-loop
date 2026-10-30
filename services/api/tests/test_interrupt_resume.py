@@ -1,3 +1,5 @@
+"""LangGraph interrupt/resume 与会话恢复行为测试。"""
+
 from tests.test_runs_api import build_client, create_collected_project, enqueue_and_process_run
 
 

@@ -1,4 +1,7 @@
-"""runtime hardening schema
+"""runtime hardening schema（恢复、后台任务、事件流和检查点）
+
+为运行增加 LangGraph 恢复字段，并建立可租约的后台任务、单调事件流和 checkpoint
+持久化表。该迁移把一次请求内执行扩展为可暂停、恢复和后台重试的运行模型。
 
 Revision ID: 20260701_0005
 Revises: 20260701_0004
@@ -19,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # 给已有 analysis_runs 行增加恢复信息；server_default 保证非空列可安全回填。
     op.add_column("analysis_runs", sa.Column("thread_id", sa.String(length=120), nullable=True))
     op.add_column(
         "analysis_runs",
@@ -31,6 +35,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_analysis_runs_thread_id"), "analysis_runs", ["thread_id"], unique=False)
 
+    # run_jobs 由 worker 竞争领取，后续迁移再补充完整租约和队列字段。
     op.create_table(
         "run_jobs",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -55,6 +60,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_run_jobs_run_id"), "run_jobs", ["run_id"], unique=False)
     op.create_index(op.f("ix_run_jobs_status"), "run_jobs", ["status"], unique=False)
 
+    # run_events 是可供前端断线恢复的 durable 事件流。
     op.create_table(
         "run_events",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -72,6 +78,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_run_events_project_id"), "run_events", ["project_id"], unique=False)
     op.create_index(op.f("ix_run_events_run_id"), "run_events", ["run_id"], unique=False)
 
+    # checkpoint 保存 Graph State 快照；thread、namespace 和 checkpoint_id 共同定位。
     op.create_table(
         "graph_checkpoints",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -100,6 +107,7 @@ def upgrade() -> None:
         unique=True,
     )
 
+    # checkpoint writes 保存 pending writes，用于 interrupt/resume 和重复回调幂等。
     op.create_table(
         "graph_checkpoint_writes",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -136,6 +144,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 先删除 checkpoint 写入和快照，再回退任务、事件及 analysis_runs 新字段。
     op.drop_index("uq_graph_checkpoint_writes_key", table_name="graph_checkpoint_writes")
     op.drop_index(op.f("ix_graph_checkpoint_writes_checkpoint_id"), table_name="graph_checkpoint_writes")
     op.drop_index(op.f("ix_graph_checkpoint_writes_thread_id"), table_name="graph_checkpoint_writes")

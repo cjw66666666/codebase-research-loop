@@ -1,4 +1,7 @@
-"""research profile
+"""research profile（项目调研档位与审计序号）
+
+为项目增加调研档位，并为审计事件补充项目内单调序号。升级时会先回填历史行，
+再建立 ``(project_id, sequence)`` 唯一约束，避免旧数据阻塞约束创建。
 
 Revision ID: 20260702_0011
 Revises: 20260702_0010
@@ -20,6 +23,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def normalize_audit_event_sequences() -> None:
+    """按项目和事件时间顺序重建审计序号，每组从 1 开始。"""
+
     connection = op.get_bind()
     rows = connection.execute(
         text(
@@ -31,6 +36,7 @@ def normalize_audit_event_sequences() -> None:
         )
     ).mappings()
 
+    # 使用独立对象作为哨兵，即使 project_id 为 NULL 也能正确识别第一行。
     current_project_id: object = object()
     next_sequence = 0
     for row in rows:
@@ -47,6 +53,7 @@ def normalize_audit_event_sequences() -> None:
 
 
 def upgrade() -> None:
+    # 先带临时默认值新增非空列，让已有项目自动落到默认调研档位。
     op.add_column(
         "projects",
         sa.Column(
@@ -56,13 +63,16 @@ def upgrade() -> None:
             server_default="quick_onboarding",
         ),
     )
+    # 默认值只用于本次回填，后续新项目由应用层显式提供档位。
     op.alter_column("projects", "research_profile", server_default=None)
+    # 审计序号同样先允许默认值写入历史行，随后重排为项目内连续值。
     op.add_column(
         "audit_events",
         sa.Column("sequence", sa.Integer(), nullable=False, server_default="0"),
     )
     normalize_audit_event_sequences()
     op.alter_column("audit_events", "sequence", server_default=None)
+    # 非空 project_id 的唯一约束保证并发写入不会长期保留重复的项目内序号。
     with op.batch_alter_table("audit_events") as batch_op:
         batch_op.create_unique_constraint(
             "uq_audit_events_project_sequence",
@@ -71,6 +81,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 先移除依赖 sequence 的唯一约束，再删除序号列和调研档位列。
     with op.batch_alter_table("audit_events") as batch_op:
         batch_op.drop_constraint(
             "uq_audit_events_project_sequence",

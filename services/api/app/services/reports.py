@@ -1,3 +1,5 @@
+"""报告快照、LLM 增强、评审工作流和 Analysis Package 组装服务。"""
+
 import json
 from typing import Any
 

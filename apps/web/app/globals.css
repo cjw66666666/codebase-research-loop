@@ -1,3 +1,4 @@
+/* 全站设计令牌：颜色、间距、圆角和阴影统一从 CSS 变量读取。 */
 :root {
   --canvas: #101010;
   --surface: #151515;
@@ -54,6 +55,7 @@ img {
   max-width: 100%;
 }
 
+/* 页面外壳、顶部品牌栏和工作台主内容区。 */
 .shell {
   min-height: 100vh;
 }
@@ -185,6 +187,7 @@ img {
   color: var(--accent);
 }
 
+/* 通用内容面板、状态徽标和操作按钮。 */
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -323,6 +326,7 @@ img {
   max-height: 520px;
 }
 
+/* 分行记录、清单网格和横向可滚动数据表。 */
 .rows {
   display: grid;
   gap: 0;
@@ -402,6 +406,7 @@ img {
   border-bottom: 0;
 }
 
+/* SSE 运行事件时间线和表单控件。 */
 .stream-events {
   display: grid;
   gap: 8px;
@@ -465,6 +470,7 @@ img {
   resize: vertical;
 }
 
+/* 概览数字和质量评分指标。 */
 .stats {
   display: grid;
   gap: 12px;
@@ -569,6 +575,7 @@ p:last-child {
   margin-bottom: 0;
 }
 
+/* 依次压缩指标、事件行和工具栏，保证平板与手机端不横向溢出。 */
 @media (max-width: 960px) {
   .metric-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

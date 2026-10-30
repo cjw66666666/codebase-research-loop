@@ -1,3 +1,6 @@
+/**
+ * 项目工作台二级导航，集中维护各调研视图的入口和当前项高亮。
+ */
 import Link from "next/link";
 
 const NAV_ITEMS = [

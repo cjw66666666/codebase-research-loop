@@ -1,4 +1,7 @@
-"""loop engine schema
+"""loop engine schema（Loop 运行与结构化分析产物）
+
+新增分析运行、轮次记录、证据、发现、风险、问题、建议和质量评分。除运行
+元数据外，各表都保留 JSON 扩展字段，并使用 project_id 支持项目级清理。
 
 Revision ID: 20260701_0003
 Revises: 20260701_0002
@@ -18,6 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # analysis_runs 是一次 Loop 的聚合根，记录轮次、停止原因和时间范围。
     op.create_table(
         "analysis_runs",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -35,6 +39,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_analysis_runs_project_id"), "analysis_runs", ["project_id"], unique=False)
 
+    # loop_turns 按 turn_index 保存每个节点的动作、观察和状态。
     op.create_table(
         "loop_turns",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -57,6 +62,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_loop_turns_project_id"), "loop_turns", ["project_id"], unique=False)
     op.create_index(op.f("ix_loop_turns_run_id"), "loop_turns", ["run_id"], unique=False)
 
+    # 证据项是可追溯事实，source_id 可空以支持运行级综合证据。
     op.create_table(
         "evidence_items",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -80,6 +86,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_evidence_items_run_id"), "evidence_items", ["run_id"], unique=False)
     op.create_index(op.f("ix_evidence_items_source_id"), "evidence_items", ["source_id"], unique=False)
 
+    # 分析发现通过 evidence_refs_json 引用证据项，支撑后续覆盖度评分。
     op.create_table(
         "findings",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -101,6 +108,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_findings_project_id"), "findings", ["project_id"], unique=False)
     op.create_index(op.f("ix_findings_run_id"), "findings", ["run_id"], unique=False)
 
+    # 风险记录严重级别、影响和缓解措施，便于人工评审判断可接受性。
     op.create_table(
         "risks",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -121,6 +129,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_risks_project_id"), "risks", ["project_id"], unique=False)
     op.create_index(op.f("ix_risks_run_id"), "risks", ["run_id"], unique=False)
 
+    # 高影响问题会暂停 Loop，等待 answer_text 写入后再恢复运行。
     op.create_table(
         "questions",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -142,6 +151,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_questions_project_id"), "questions", ["project_id"], unique=False)
     op.create_index(op.f("ix_questions_run_id"), "questions", ["run_id"], unique=False)
 
+    # 建议表汇总最终结论、论证和下一步行动。
     op.create_table(
         "recommendations",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -161,6 +171,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_recommendations_project_id"), "recommendations", ["project_id"], unique=False)
     op.create_index(op.f("ix_recommendations_run_id"), "recommendations", ["run_id"], unique=False)
 
+    # 质量评分按轮次保存六维指标、总分、变化量和改进建议。
     op.create_table(
         "quality_scores",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -190,6 +201,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 按产物依赖逆序回退，quality_scores 最先删除，analysis_runs 最后删除。
     op.drop_index(op.f("ix_quality_scores_turn_id"), table_name="quality_scores")
     op.drop_index(op.f("ix_quality_scores_run_id"), table_name="quality_scores")
     op.drop_index(op.f("ix_quality_scores_project_id"), table_name="quality_scores")

@@ -1,3 +1,5 @@
+"""v3 运行事件和后台任务模型迁移兼容性测试。"""
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 from importlib import import_module

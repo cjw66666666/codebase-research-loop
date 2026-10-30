@@ -1,3 +1,5 @@
+"""规范化 LLM 复核结果，并把它作为确定性校验的辅助意见合并。"""
+
 from __future__ import annotations
 
 from copy import deepcopy

@@ -1,3 +1,5 @@
+"""内置调研档位定义、查询和兼容性测试。"""
+
 import importlib.util
 from pathlib import Path
 

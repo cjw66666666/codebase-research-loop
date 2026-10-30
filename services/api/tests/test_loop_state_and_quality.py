@@ -1,3 +1,5 @@
+"""Loop 终止状态和质量评分边界测试。"""
+
 import pytest
 
 from app.engine.state_machine import (

@@ -1,3 +1,5 @@
+"""记录可审计的 LLM 调用，包括提示词摘要、用量、延迟和错误信息。"""
+
 import hashlib
 import json
 from typing import Any

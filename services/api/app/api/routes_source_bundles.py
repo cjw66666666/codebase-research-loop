@@ -1,3 +1,5 @@
+"""项目资料包的创建、查询和按包采集接口。"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -24,9 +26,12 @@ def create_project_source_bundle(
     payload: SourceBundleCreate,
     session: Session = Depends(get_session),
 ) -> SourceBundle:
+    """创建资料包并同步登记包内所有输入源。"""
+
     project = get_project_or_404(session, project_id)
     bundle = create_source_bundle(session, project, payload)
     bundle_id = bundle.id
+    # 提交后重新查询，确保响应中的 items 及关联状态来自已落库结果。
     session.commit()
     refreshed_bundle = get_source_bundle(session, project, bundle_id)
     if refreshed_bundle is None:
@@ -39,6 +44,8 @@ def list_project_source_bundles(
     project_id: str,
     session: Session = Depends(get_session),
 ) -> list[SourceBundle]:
+    """按创建顺序返回项目下的全部资料包。"""
+
     project = get_project_or_404(session, project_id)
     return list_source_bundles(session, project)
 
@@ -49,6 +56,8 @@ def get_project_source_bundle(
     bundle_id: str,
     session: Session = Depends(get_session),
 ) -> SourceBundle:
+    """返回指定项目中的单个资料包详情。"""
+
     project = get_project_or_404(session, project_id)
     bundle = get_source_bundle(session, project, bundle_id)
     if bundle is None:
@@ -63,12 +72,16 @@ def collect_project_source_bundle(
     session: Session = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> SourceBundle:
+    """采集资料包中尚未进入终态的源，并刷新条目和资料包状态。"""
+
     project = get_project_or_404(session, project_id)
     bundle = get_source_bundle_for_collection(session, project, bundle_id)
     if bundle is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source bundle not found")
 
+    # 只传入当前包内仍可采集的 source_id，避免意外处理其他资料包的来源。
     collect_project_sources(session, project, settings, source_ids=collectable_source_ids(bundle))
+    # 采集结果先同步到条目状态，再据此计算资料包整体的 failed/partial/collected。
     refresh_bundle_item_collection_state(session, bundle)
     session.commit()
     refreshed_bundle = get_source_bundle(session, project, bundle_id)

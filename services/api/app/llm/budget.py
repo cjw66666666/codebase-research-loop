@@ -1,3 +1,5 @@
+"""估算单次请求成本，并按 profile 的预算窗口给出放行决策。"""
+
 import json
 from dataclasses import dataclass
 from datetime import timedelta

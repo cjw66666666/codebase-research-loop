@@ -1,3 +1,5 @@
+"""Loop 运行启动条件和终止状态判定规则。"""
+
 STARTABLE_PROJECT_STATUSES = {
     "draft",
     "ready",

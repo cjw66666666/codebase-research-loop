@@ -1,3 +1,5 @@
+"""比较两次报告快照中的业务内容，忽略数据库和时间戳等易变字段。"""
+
 import json
 from datetime import UTC, date, datetime
 from decimal import Decimal

@@ -1,3 +1,5 @@
+"""常驻 worker 进程的命令行入口、轮询和 stale job 恢复循环。"""
+
 from __future__ import annotations
 
 import argparse
@@ -21,7 +23,7 @@ def run_worker_loop(worker_id: str, queue_name: str, poll_interval: float, lease
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Loop Engineering local worker service")
+    parser = argparse.ArgumentParser(description="Codebase Research Loop local worker service")
     parser.add_argument("--worker-id", default=f"local-worker-{uuid4()}")
     parser.add_argument("--queue", default="default")
     parser.add_argument("--poll-interval", type=float, default=2.0)

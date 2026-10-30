@@ -1,3 +1,5 @@
+"""把 Analysis Package 渲染成结构稳定、可审查的项目调研报告。"""
+
 from typing import Any
 
 from app.verifiers.package import as_list, value_of

@@ -1,3 +1,5 @@
+"""调研档位 benchmark 的确定性切片和期望结果测试。"""
+
 from pathlib import Path
 
 import pytest

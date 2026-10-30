@@ -1,3 +1,6 @@
+/**
+ * 质量评分面板：把各项确定性 verifier 分数呈现为紧凑指标。
+ */
 import type { QualityScore } from "@/types/project";
 
 type Metric = {

@@ -1,3 +1,5 @@
+"""worker job 领取、心跳和租约丢失行为测试。"""
+
 from collections.abc import Iterator
 from datetime import timedelta
 

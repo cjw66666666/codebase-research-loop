@@ -1,3 +1,6 @@
+/**
+ * 浏览器/服务端共用的后端 API 适配层，统一基础 URL、错误处理和响应类型。
+ */
 import type {
   AnalysisPackage,
   AnalysisRun,

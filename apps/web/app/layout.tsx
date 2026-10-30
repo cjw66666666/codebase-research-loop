@@ -1,11 +1,14 @@
+/**
+ * 全站根布局：加载全局样式、站点元数据和跨页面导航。
+ */
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Loop Engineering",
-  description: "工程调研 Loop Assistant",
+  title: "Codebase Research Loop",
+  description: "可验证的代码库调研助手",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -20,8 +23,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <img src="/brand/AI.png" alt="" />
                 </span>
                 <span>
-                  <strong>Loop Engineering</strong>
-                  <small>调研助手</small>
+                  <strong>Codebase Research Loop</strong>
+                  <small>工程调研助手</small>
                 </span>
               </Link>
             </div>

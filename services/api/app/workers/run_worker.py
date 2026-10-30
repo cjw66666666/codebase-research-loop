@@ -1,3 +1,5 @@
+"""后台 worker 单任务执行入口和 job 租约守卫。"""
+
 from __future__ import annotations
 
 from collections.abc import Callable

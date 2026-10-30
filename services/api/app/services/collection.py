@@ -1,3 +1,5 @@
+"""输入源采集编排：读取本地文件、克隆公开仓库、抓取网页并写入快照。"""
+
 from pathlib import Path
 
 from sqlalchemy import select

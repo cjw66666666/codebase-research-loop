@@ -1,3 +1,5 @@
+"""LLM profile 的配置判断、密钥隐藏和 API 行为测试。"""
+
 from collections.abc import Generator
 from datetime import UTC, datetime
 

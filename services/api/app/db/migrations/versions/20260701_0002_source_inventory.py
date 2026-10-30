@@ -1,4 +1,7 @@
-"""source inventory schema
+"""source inventory schema（输入快照与代码库地图）
+
+把一次性采集结果固化为可审计快照，并保存代码目录、依赖、测试和入口等
+确定性扫描线索。后续分析只能引用这些已落库的事实。
 
 Revision ID: 20260701_0002
 Revises: 20260630_0001
@@ -19,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # 源快照保存可读摘要、外部内容路径、跳过项和采集错误。
     op.create_table(
         "source_snapshots",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -50,6 +54,7 @@ def upgrade() -> None:
         ["source_id"],
         unique=False,
     )
+    # 代码库地图按输入源保存目录树和各类关键文件清单。
     op.create_table(
         "codebase_maps",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -86,6 +91,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 先删除索引和引用 sources 的扫描结果，保持降级顺序可重复执行。
     op.drop_index(op.f("ix_codebase_maps_source_id"), table_name="codebase_maps")
     op.drop_index(op.f("ix_codebase_maps_project_id"), table_name="codebase_maps")
     op.drop_table("codebase_maps")

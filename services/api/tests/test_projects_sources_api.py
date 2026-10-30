@@ -1,3 +1,5 @@
+"""项目与输入源 CRUD API 的回归测试。"""
+
 from collections.abc import Generator
 from datetime import UTC, datetime
 from pathlib import Path

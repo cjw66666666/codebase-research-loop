@@ -1,3 +1,6 @@
+/**
+ * 项目运行页：启动、取消、重试和恢复 Loop，并展示运行事件与 LLM 调用。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RunStreamPanel } from "@/components/run-stream-panel";

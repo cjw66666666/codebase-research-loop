@@ -1,3 +1,5 @@
+"""把报告 Markdown 渲染为支持中文的 PDF 字节流。"""
+
 from io import BytesIO
 
 from reportlab.lib.pagesizes import A4

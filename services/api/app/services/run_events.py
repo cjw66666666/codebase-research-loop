@@ -1,3 +1,5 @@
+"""运行事件的持久化、序号分配和 SSE 编码。"""
+
 import json
 from collections.abc import Iterable
 from time import monotonic, sleep

@@ -1,3 +1,5 @@
+"""按任务类型选择 LLM profile，并在预算和审计约束下发起模型调用。"""
+
 import os
 from time import perf_counter
 from typing import Any

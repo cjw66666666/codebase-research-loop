@@ -1,3 +1,5 @@
+"""调研档位、质量评分、校验器和报告生成之间的集成测试。"""
+
 from types import SimpleNamespace
 
 from sqlalchemy import create_engine

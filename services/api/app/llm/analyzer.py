@@ -1,3 +1,5 @@
+"""校验并规范化 LLM 返回的分析 JSON，阻止未满足结构约束的数据进入业务链路。"""
+
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any

@@ -1,3 +1,6 @@
+/**
+ * LLM 设置页：创建配置档位，并展示端点、预算和可用状态。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createLlmProfile, listLlmProfiles } from "@/lib/api";
@@ -204,7 +207,7 @@ export default async function LlmSettingsPage() {
             </label>
             <label className="field">
               模型 Model
-              <input className="input" maxLength={160} name="model" placeholder="例如 deepseek-v4-flash" required />
+              <input className="input" maxLength={160} name="model" placeholder="例如 deepseek-chat" required />
             </label>
             <label className="field">
               API key 环境变量

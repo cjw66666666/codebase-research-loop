@@ -1,3 +1,5 @@
+"""校验 LLM 生成的报告增强片段，并渲染为受证据引用约束的 Markdown。"""
+
 from dataclasses import dataclass, field
 from typing import Any
 

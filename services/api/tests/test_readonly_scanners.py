@@ -1,3 +1,5 @@
+"""只读代码扫描和敏感路径跳过策略测试。"""
+
 import os
 import sys
 from pathlib import Path

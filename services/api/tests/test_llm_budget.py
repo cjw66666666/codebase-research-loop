@@ -1,3 +1,5 @@
+"""LLM 请求成本估算、预算窗口和放行决策测试。"""
+
 import json
 from collections.abc import Generator
 from contextlib import contextmanager

@@ -1,4 +1,4 @@
-# Loop Engineering 面试追问清单
+# Codebase Research Loop 设计追问清单
 
 ## 1. 为什么用 LangGraph，而不是在函数里顺序调用？
 

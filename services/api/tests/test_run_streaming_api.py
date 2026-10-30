@@ -1,3 +1,5 @@
+"""运行事件 SSE 编码和断线补历史测试。"""
+
 import json
 from pathlib import Path
 

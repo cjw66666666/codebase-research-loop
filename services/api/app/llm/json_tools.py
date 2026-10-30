@@ -1,3 +1,5 @@
+"""从可能包含 Markdown 包裹或前后说明的模型输出中提取 JSON 对象。"""
+
 import json
 from typing import Any
 

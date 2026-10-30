@@ -1,4 +1,7 @@
-"""v4 runtime patrol schema
+"""v4 runtime patrol schema（任务租约、工具账本和报告候选）
+
+补充后台任务的队列与租约字段，并建立只读工具注册表、工具调用审计、LLM 报告
+候选和评估运行表，为后台巡检及人工评审提供持久化基础。
 
 Revision ID: 20260701_0009
 Revises: 20260701_0008
@@ -19,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # 队列、过期时间和心跳共同支持 worker 租约；next_run_at 用于延迟或重试。
     op.add_column(
         "run_jobs",
         sa.Column("queue_name", sa.String(length=80), nullable=False, server_default="default"),
@@ -30,6 +34,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_run_jobs_locked_until"), "run_jobs", ["locked_until"], unique=False)
     op.create_index(op.f("ix_run_jobs_next_run_at"), "run_jobs", ["next_run_at"], unique=False)
 
+    # 工具注册表只描述能力、输入结构和权限级别，不保存具体执行实现。
     op.create_table(
         "tool_registrations",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -44,6 +49,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_tool_registrations_name"), "tool_registrations", ["name"], unique=True)
 
+    # 工具调用账本仅保存输入输出摘要，避免敏感内容进入长期审计记录。
     op.create_table(
         "tool_calls",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -70,6 +76,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_tool_calls_tool_name"), "tool_calls", ["tool_name"], unique=False)
     op.create_index(op.f("ix_tool_calls_status"), "tool_calls", ["status"], unique=False)
 
+    # LLM 报告候选先独立保存，只有通过验证后才关联正式 ReportSnapshot。
     op.create_table(
         "llm_report_artifacts",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -94,6 +101,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_llm_report_artifacts_call_id"), "llm_report_artifacts", ["call_id"], unique=False)
     op.create_index(op.f("ix_llm_report_artifacts_status"), "llm_report_artifacts", ["status"], unique=False)
 
+    # 评估运行保存总体指标和逐用例结果，供回归对比与历史追踪。
     op.create_table(
         "evaluation_runs",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -110,6 +118,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 按新增对象的依赖关系逆序删除，最后移除 run_jobs 的租约扩展字段。
     op.drop_index(op.f("ix_evaluation_runs_status"), table_name="evaluation_runs")
     op.drop_table("evaluation_runs")
 

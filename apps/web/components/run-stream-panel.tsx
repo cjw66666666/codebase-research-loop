@@ -1,5 +1,8 @@
 "use client";
 
+/**
+ * 运行事件客户端组件：解析 SSE，增量展示 Loop 节点进度并刷新服务端数据。
+ */
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { statusLabel } from "@/lib/labels";

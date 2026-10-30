@@ -1,3 +1,5 @@
+"""只读工具网关、权限边界和调用账本测试。"""
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path

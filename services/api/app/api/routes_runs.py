@@ -1,3 +1,5 @@
+"""Loop 运行、事件流、恢复和问题回答接口。"""
+
 import json
 from collections.abc import Generator
 
@@ -39,6 +41,8 @@ router = APIRouter(prefix="/projects/{project_id}", tags=["runs"])
 
 @router.post("/runs", response_model=RunEnqueueRead, status_code=status.HTTP_202_ACCEPTED)
 def create_run(project_id: str, session: Session = Depends(get_session)) -> dict:
+    """创建后台运行任务并立即返回 202，不等待 LangGraph 执行完成。"""
+
     project = get_project_or_404(session, project_id)
     try:
         run, job = enqueue_run(session, project)
@@ -52,13 +56,17 @@ def create_run(project_id: str, session: Session = Depends(get_session)) -> dict
 
 @router.post("/runs/stream")
 def create_run_stream(project_id: str, session: Session = Depends(get_session)) -> StreamingResponse:
+    """创建运行，同步尝试消费队列中的一个本地 job，再返回该运行当前已有事件。"""
+
     project = get_project_or_404(session, project_id)
     try:
         run, _job = enqueue_run(session, project)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     session.commit()
+    # 该接口用于单进程演示：先把任务提交，再立即尝试消费队列中的下一个任务。
     run_one_job()
+    # worker 使用独立 Session 写入事件，当前 Session 需过期缓存后才能读到新结果。
     session.expire_all()
     events = list_run_events(session, project.id, run.id)
     return StreamingResponse(
@@ -70,6 +78,8 @@ def create_run_stream(project_id: str, session: Session = Depends(get_session)) 
 
 @router.get("/runs", response_model=list[AnalysisRunRead])
 def list_runs(project_id: str, session: Session = Depends(get_session)) -> list[AnalysisRun]:
+    """按创建时间倒序返回项目的全部运行。"""
+
     project = get_project_or_404(session, project_id)
     return list(
         session.scalars(
@@ -82,6 +92,8 @@ def list_runs(project_id: str, session: Session = Depends(get_session)) -> list[
 
 @router.get("/runs/{run_id}", response_model=AnalysisPackageRead)
 def get_run(project_id: str, run_id: str, session: Session = Depends(get_session)) -> dict:
+    """返回一次运行的完整 Analysis Package。"""
+
     get_project_or_404(session, project_id)
     run = get_run_or_404(session, project_id, run_id)
     return build_analysis_package(session, run.id)
@@ -89,8 +101,11 @@ def get_run(project_id: str, run_id: str, session: Session = Depends(get_session
 
 @router.post("/runs/{run_id}/cancel", response_model=AnalysisRunRead)
 def cancel_run(project_id: str, run_id: str, session: Session = Depends(get_session)) -> AnalysisRun:
+    """取消运行及其 active 后台任务，并同步更新项目和事件流状态。"""
+
     project = get_project_or_404(session, project_id)
     run = get_run_or_404(session, project_id, run_id)
+    # 取消 job 后 worker 即使持有旧上下文，也会因租约归属检查停止继续执行。
     cancel_run_jobs(session, run.id)
     run.status = "cancelled"
     run.stop_reason = "User cancelled the run."
@@ -103,6 +118,8 @@ def cancel_run(project_id: str, run_id: str, session: Session = Depends(get_sess
 
 @router.post("/runs/{run_id}/retry", response_model=RunEnqueueRead, status_code=status.HTTP_202_ACCEPTED)
 def retry_run(project_id: str, run_id: str, session: Session = Depends(get_session)) -> dict:
+    """把失败或已取消的运行重新排队，而不是创建新的 AnalysisRun。"""
+
     project = get_project_or_404(session, project_id)
     run = get_run_or_404(session, project_id, run_id)
     if run.status not in {"failed", "cancelled"}:
@@ -125,6 +142,8 @@ def get_run_events(
     after_sequence: int = 0,
     session: Session = Depends(get_session),
 ):
+    """按 sequence 游标返回运行事件，支持断线后补历史。"""
+
     get_run_or_404(session, project_id, run_id)
     return list_run_events(session, project_id, run_id, after_sequence)
 
@@ -135,6 +154,9 @@ def stream_run_events(
     run_id: str,
     after_sequence: int = 0,
 ) -> StreamingResponse:
+    """持续推送运行事件；初次连接从 after_sequence 之后开始。"""
+
+    # 流式响应生命周期长于普通请求，因此不持有请求级 Session，而由生成器按需创建。
     session_factory = get_worker_session_factory()
     with session_factory() as session:
         get_run_or_404(session, project_id, run_id)
@@ -152,6 +174,8 @@ def stream_run_events(
 
 @router.post("/runs/{run_id}/resume", response_model=AnalysisPackageRead)
 def resume_existing_run(project_id: str, run_id: str, session: Session = Depends(get_session)) -> dict:
+    """从 LangGraph checkpoint 恢复因等待输入而暂停的运行。"""
+
     project = get_project_or_404(session, project_id)
     run = get_run_or_404(session, project_id, run_id)
     try:
@@ -169,6 +193,8 @@ def answer_question(
     payload: QuestionAnswerCreate,
     session: Session = Depends(get_session),
 ) -> Question:
+    """保存用户对阻塞问题的回答，并记录审计事件。"""
+
     project = get_project_or_404(session, project_id)
     question = session.get(Question, question_id)
     if question is None or question.project_id != project.id:
@@ -176,6 +202,7 @@ def answer_question(
     question.status = "answered"
     question.answer_text = payload.answer_text
     question.answered_at = utc_now()
+    # 缺少分析目标时，该问题的回答同时回填项目字段，后续恢复无需再次追问。
     if question.metadata_json.get("missing_field") == "analysis_goal" and not project.analysis_goal:
         project.analysis_goal = payload.answer_text
     record_event(
@@ -211,6 +238,7 @@ def stream_run_response(
         },
     )
     try:
+        # 每个节点完成后立即提交，确保 SSE 发出的事实已经持久化。
         for event_payload in stream_run_graph_events(session, project_id, run_id, thread_id):
             session.commit()
             yield encode_sse("node_completed", event_payload)
@@ -232,6 +260,7 @@ def stream_run_response(
             },
         )
     except Exception as exc:
+        # 保留已经提交的节点产物，只回滚当前失败操作，再把运行和项目标记为 failed。
         session.rollback()
         project = session.get(Project, project_id)
         run = session.get(AnalysisRun, run_id)
@@ -252,10 +281,15 @@ def stream_run_response(
 
 
 def encode_sse(event_name: str, payload: dict) -> str:
+    """把事件名和 JSON 载荷编码为一条 SSE 消息。"""
+
+    # ensure_ascii=False 保留中文，方便直接调试和阅读事件流。
     return f"event: {event_name}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
 def get_project_or_404(session: Session, project_id: str) -> Project:
+    """读取项目，不存在时抛出 HTTP 404。"""
+
     project = session.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -263,6 +297,8 @@ def get_project_or_404(session: Session, project_id: str) -> Project:
 
 
 def get_run_or_404(session: Session, project_id: str, run_id: str) -> AnalysisRun:
+    """读取运行并校验项目归属，防止通过 run_id 跨项目访问。"""
+
     run = session.get(AnalysisRun, run_id)
     if run is None or run.project_id != project_id:
         raise HTTPException(status_code=404, detail="Run not found")
@@ -270,6 +306,9 @@ def get_run_or_404(session: Session, project_id: str, run_id: str) -> AnalysisRu
 
 
 def list_by_run(session: Session, model, run_id: str):
+    """按运行读取某一类分析产物。"""
+
+    # 轮次应严格按 turn_index 排序；其他产物按创建时间排序，id 作为稳定兜底。
     if model is LoopTurn:
         order_by = (LoopTurn.turn_index.asc(), LoopTurn.id.asc())
     else:
@@ -282,6 +321,8 @@ def list_by_run(session: Session, model, run_id: str):
 
 
 def build_analysis_package(session: Session, run_id: str) -> dict:
+    """组装运行元数据及全部结构化分析产物。"""
+
     run = session.get(AnalysisRun, run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")

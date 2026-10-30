@@ -1,3 +1,5 @@
+"""评估 API、评估结果结构和扫描回归用例的测试。"""
+
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path

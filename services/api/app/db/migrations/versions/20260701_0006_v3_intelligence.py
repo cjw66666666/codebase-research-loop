@@ -1,4 +1,7 @@
-"""v3 intelligence runtime schema
+"""v3 intelligence runtime schema（LLM 配置、调用账本和分析产物）
+
+建立可切换的 LLM 配置档位，以及每次调用的审计账本。模型返回的结构化结果先
+进入 artifact 表，经过验证后才允许合并到正式分析产物。
 
 Revision ID: 20260701_0006
 Revises: 20260701_0005
@@ -19,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # LLM profile 只保存环境变量名和调用参数，不把 API key 写入数据库。
     op.create_table(
         "llm_profiles",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -40,6 +44,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_llm_profiles_task_type"), "llm_profiles", ["task_type"], unique=False)
 
+    # 调用账本记录 prompt 哈希、输入引用、token 用量、耗时和错误。
     op.create_table(
         "llm_calls",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -71,6 +76,7 @@ def upgrade() -> None:
     op.create_index(op.f("ix_llm_calls_profile_id"), "llm_calls", ["profile_id"], unique=False)
     op.create_index(op.f("ix_llm_calls_task_type"), "llm_calls", ["task_type"], unique=False)
 
+    # LLM 结构化分析结果先隔离保存，accepted 标记决定能否进入正式分析包。
     op.create_table(
         "llm_analysis_artifacts",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -99,6 +105,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 产物依赖调用账本，因此先删除 artifact，再删除 calls 和 profiles。
     op.drop_index(op.f("ix_llm_analysis_artifacts_call_id"), table_name="llm_analysis_artifacts")
     op.drop_index(op.f("ix_llm_analysis_artifacts_run_id"), table_name="llm_analysis_artifacts")
     op.drop_index(op.f("ix_llm_analysis_artifacts_project_id"), table_name="llm_analysis_artifacts")

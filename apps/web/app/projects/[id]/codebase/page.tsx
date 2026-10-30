@@ -1,3 +1,6 @@
+/**
+ * 代码库地图页：把扫描结果按模块、入口和关键文件组织成可浏览视图。
+ */
 import { WorkbenchNav } from "@/components/workbench-nav";
 import { getProject, getProjectInventory } from "@/lib/api";
 

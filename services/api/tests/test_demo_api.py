@@ -1,3 +1,5 @@
+"""本地演示项目创建和演示运行链路的回归测试。"""
+
 from pathlib import Path
 
 from app.core.config import Settings, get_settings

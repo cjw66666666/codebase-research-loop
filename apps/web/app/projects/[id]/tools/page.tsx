@@ -1,3 +1,6 @@
+/**
+ * 工具页面：展示只读工具注册信息及最近一次运行的工具调用记录。
+ */
 import Link from "next/link";
 import { WorkbenchNav } from "@/components/workbench-nav";
 import { getProject, listProjectRuns, listRunToolCalls, listTools } from "@/lib/api";

@@ -1,3 +1,6 @@
+/**
+ * 分析发现页：展示最新可评审运行中的 findings 及其证据引用。
+ */
 import { WorkbenchNav } from "@/components/workbench-nav";
 import { getProject, getProjectRun, listProjectRuns } from "@/lib/api";
 import { listText, riskLabel, sourceTypeLabel } from "@/lib/labels";

@@ -1,4 +1,7 @@
-"""fix llm profile temperature type
+"""fix llm profile temperature type（温度字段类型修正）
+
+把 ``llm_profiles.temperature`` 从早期整数列改为浮点列。该迁移只调整列类型，
+历史缩放值由紧接其后的 0008 迁移负责归一化。
 
 Revision ID: 20260701_0007
 Revises: 20260701_0006
@@ -19,7 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # 早期 V3 迭代曾把 temperature 存成整数缩放值；这里统一为模型 API 直接使用的浮点值。
+    # 目标形态是模型 API 直接使用的浮点值；已有整数缩放值由 0008 继续修正。
     op.alter_column(
         "llm_profiles",
         "temperature",

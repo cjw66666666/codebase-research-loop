@@ -1,3 +1,5 @@
+"""只读工具的统一注册、调用边界和审计记录入口。"""
+
 from __future__ import annotations
 
 import subprocess

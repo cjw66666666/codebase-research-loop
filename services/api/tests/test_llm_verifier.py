@@ -1,3 +1,5 @@
+"""LLM 辅助校验结果规范化及确定性优先合并测试。"""
+
 from __future__ import annotations
 
 import json

@@ -1,7 +1,8 @@
+# FastAPI 后端的运行依赖和开发依赖分组。
 [project]
-name = "loop-engineering-api"
+name = "codebase-research-loop-api"
 version = "0.1.0"
-description = "FastAPI backend for the Loop Engineering analysis runtime."
+description = "FastAPI backend for the Codebase Research Loop analysis runtime."
 requires-python = ">=3.11"
 dependencies = [
   "alembic>=1.13.0,<2.0.0",
@@ -18,10 +19,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# pytest 只在本地和 CI 的测试环境中安装。
 dev = [
   "pytest>=8.3.0,<9.0.0"
 ]
 
 [tool.pytest.ini_options]
+# 从 services/api 目录直接运行测试时，把当前目录加入模块搜索路径。
 pythonpath = ["."]
 testpaths = ["tests"]

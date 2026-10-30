@@ -1,4 +1,5 @@
 {
+  // Next.js TypeScript 编译配置；路径别名 @/* 指向 apps/web 根目录。
   "compilerOptions": {
     "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],

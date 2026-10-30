@@ -1,3 +1,5 @@
+"""本地文件、目录、网页和 GitHub 输入源校验测试。"""
+
 from pathlib import Path
 
 import pytest

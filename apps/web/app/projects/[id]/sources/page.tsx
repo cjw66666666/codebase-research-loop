@@ -1,3 +1,6 @@
+/**
+ * 输入源与资料包页面：维护来源、创建资料包并触发批量采集。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WorkbenchNav } from "@/components/workbench-nav";

@@ -1,3 +1,5 @@
+"""网页抓取和 GitHub 克隆工具的边界与输出测试。"""
+
 from pathlib import Path
 import subprocess
 from types import SimpleNamespace
@@ -15,7 +17,7 @@ def test_fetch_web_url_extracts_title_text_and_metadata():
         html = """
         <html>
           <head><title>Research Note</title><style>.hidden{}</style></head>
-          <body><h1>Loop Engineering</h1><script>alert(1)</script><p>Useful evidence.</p></body>
+          <body><h1>Codebase Research Loop</h1><script>alert(1)</script><p>Useful evidence.</p></body>
         </html>
         """
         return httpx.Response(
@@ -34,7 +36,7 @@ def test_fetch_web_url_extracts_title_text_and_metadata():
 
     assert result["status"] == "collected"
     assert result["title"] == "Research Note"
-    assert "Loop Engineering" in result["content_excerpt"]
+    assert "Codebase Research Loop" in result["content_excerpt"]
     assert "alert" not in result["content_excerpt"]
     assert result["metadata"]["content_type"].startswith("text/html")
     assert result["metadata"]["final_url"] == "https://example.com/research"

@@ -1,3 +1,5 @@
+"""等待中的运行事件流和终止事件推送测试。"""
+
 import json
 
 from app.db.models import RunJob

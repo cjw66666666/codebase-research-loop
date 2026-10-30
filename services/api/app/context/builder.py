@@ -1,3 +1,5 @@
+"""把已落库的项目事实组装成 Loop Engine 可消费的上下文包。"""
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 

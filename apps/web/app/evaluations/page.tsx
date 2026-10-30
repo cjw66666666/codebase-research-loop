@@ -1,3 +1,6 @@
+/**
+ * 确定性回归评估页面：展示最近结果，并通过服务端 Action 触发新评估。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLatestEvaluation, runEvaluations } from "@/lib/api";

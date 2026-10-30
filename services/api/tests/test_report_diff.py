@@ -1,3 +1,5 @@
+"""报告快照差异计算和易变字段过滤测试。"""
+
 import json
 from pathlib import Path
 

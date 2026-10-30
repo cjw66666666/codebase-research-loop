@@ -1,3 +1,5 @@
+"""把通过结构校验的 LLM 分析条目合并到确定性分析结果中。"""
+
 from copy import deepcopy
 from typing import Any
 

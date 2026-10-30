@@ -1,3 +1,5 @@
+"""Project Research Package 组装、渲染和报告消息构建测试。"""
+
 from app.db.models import SourceBundle, SourceBundleItem
 from app.services.reports import build_llm_report_messages, build_inventory, build_analysis_package, create_report_snapshot
 from app.evaluations.runner import run_evaluations

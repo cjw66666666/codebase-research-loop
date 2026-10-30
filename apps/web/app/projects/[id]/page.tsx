@@ -1,3 +1,6 @@
+/**
+ * 项目概览页：展示当前运行、质量结果和下一步调研入口。
+ */
 import Link from "next/link";
 import { QualityPanel } from "@/components/quality-panel";
 import { WorkbenchNav } from "@/components/workbench-nav";

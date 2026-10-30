@@ -1,3 +1,5 @@
+"""Analysis Package 的确定性结构、证据、风险和档位要求校验器。"""
+
 from collections.abc import Iterable
 from typing import Any
 

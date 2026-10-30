@@ -1,3 +1,6 @@
+/**
+ * 前端共享的后端数据结构定义，字段与 API schema 保持一一对应。
+ */
 export type Project = {
   id: string;
   name: string;

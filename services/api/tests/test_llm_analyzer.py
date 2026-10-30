@@ -1,3 +1,5 @@
+"""LLM 分析结果结构校验与确定性结果合并测试。"""
+
 import pytest
 
 from app.engine.llm_merge import merge_llm_analysis

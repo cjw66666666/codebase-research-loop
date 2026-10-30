@@ -1,3 +1,5 @@
+"""输入源采集 API 和采集结果清单的回归测试。"""
+
 from collections.abc import Generator
 from pathlib import Path
 

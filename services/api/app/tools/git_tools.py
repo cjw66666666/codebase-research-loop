@@ -1,3 +1,5 @@
+"""公开 GitHub 仓库的 URL 解析、安全克隆和工作区路径管理。"""
+
 import hashlib
 import re
 import shutil

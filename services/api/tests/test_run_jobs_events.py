@@ -1,3 +1,5 @@
+"""后台 job 生命周期与运行事件持久化测试。"""
+
 from collections.abc import Iterator
 
 from sqlalchemy.orm import Session

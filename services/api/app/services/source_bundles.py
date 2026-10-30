@@ -1,3 +1,5 @@
+"""资料包及其条目的创建、采集状态汇总和查询服务。"""
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 

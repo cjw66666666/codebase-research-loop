@@ -1,3 +1,4 @@
+# 文本文件统一使用 LF，二进制文档避免被 Git 当作文本转换。
 * text=auto eol=lf
 
 *.png binary

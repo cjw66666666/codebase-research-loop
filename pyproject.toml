@@ -1,5 +1,8 @@
+# 根包只声明通用 Python 元数据；可运行后端依赖在 services/api/pyproject.toml。
 [project]
-name = "projectresearchloopassistant"
+name = "codebase-research-loop"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.1",
+]

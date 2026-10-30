@@ -1,3 +1,5 @@
+"""输入源快照和代码库清单 ORM 模型的持久化测试。"""
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool

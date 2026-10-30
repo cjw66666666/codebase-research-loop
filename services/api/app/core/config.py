@@ -1,3 +1,5 @@
+"""集中读取环境变量，并固定配置文件和 workspace 的解析基准。"""
+
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,7 +18,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=REPO_ROOT / ".env", env_file_encoding="utf-8-sig", extra="ignore")
 
-    app_name: str = "Loop Engineering API"
+    app_name: str = "Codebase Research Loop API"
     database_url: str = "mysql+pymysql://root@localhost:3306/loop_engineering"
     workspace_root: Path = REPO_ROOT / "workspace" / "projects"
     source_max_file_bytes: int = 1_000_000
@@ -38,7 +40,7 @@ class Settings(BaseSettings):
             self.workspace_root = (REPO_ROOT / self.workspace_root).resolve()
         return self
 
-
+# 单例返回，避免应用代码重复读取环境变量。
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

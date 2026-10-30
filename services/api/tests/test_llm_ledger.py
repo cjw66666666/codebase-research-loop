@@ -1,3 +1,5 @@
+"""LLM 调用账本记录、提示词摘要和用量统计测试。"""
+
 import json
 from collections.abc import Generator
 from contextlib import contextmanager

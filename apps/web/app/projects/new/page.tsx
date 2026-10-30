@@ -1,3 +1,6 @@
+/**
+ * 新建调研项目页面：把调研档位模板转换为项目目标并提交创建。
+ */
 import { redirect } from "next/navigation";
 import { createProject } from "@/lib/api";
 import { researchTemplates, templateGoal } from "@/lib/research-templates";

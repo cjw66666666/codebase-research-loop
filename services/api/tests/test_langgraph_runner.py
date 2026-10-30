@@ -1,3 +1,5 @@
+"""LangGraph Loop Engine 的节点顺序、执行和恢复测试。"""
+
 from app.engine.runner import NODE_ORDER
 from tests.test_runs_api import build_client, create_collected_project, enqueue_and_process_run
 

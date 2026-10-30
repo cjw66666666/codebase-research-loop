@@ -1,3 +1,5 @@
+"""评估用例调度器：隔离运行扫描回归和调研档位 benchmark。"""
+
 from contextlib import nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -18,6 +20,8 @@ KNOWN_CASE_TYPES = {"scan_regression", "profile_benchmark"}
 
 
 def _check(name: str, passed: bool, message: str) -> dict:
+    """构造所有评估用例共用的检查结果结构。"""
+
     return {
         "name": name,
         "passed": passed,
@@ -26,6 +30,12 @@ def _check(name: str, passed: bool, message: str) -> dict:
 
 
 def _unknown_case_type_result(case: EvaluationCase) -> dict:
+    """为未知 case_type 生成失败结果，而不是中断整批评估。
+
+    保留与正常结果一致的字段可以保证 API 响应结构稳定，调用方无需为配置错误
+    单独写一套解析逻辑；该 case 仍会被计入总失败数。
+    """
+
     checks = [
         _check(
             "known_case_type",
@@ -48,10 +58,16 @@ def _unknown_case_type_result(case: EvaluationCase) -> dict:
 
 
 def _scan_case(case_root: Path) -> dict:
+    """使用受控大小限制扫描单个 fixture，避免评估读取过大的测试文件。"""
+
+    # 评估输出只需要证明基础扫描能力，过大的摘录会放大数据库/响应体并降低测试速度。
     return scan_codebase(case_root, max_file_bytes=256 * 1024, excerpt_chars=500)
 
 
 def _project_research_package_check() -> dict:
+    """确认报告渲染器仍包含 Project Research Package 的核心章节。"""
+
+    # 这是渲染器契约检查，不依赖某个 fixture 的具体内容。
     required_sections = {
         "工程接手指南",
         "启动与运行线索",
@@ -73,6 +89,9 @@ def _project_research_package_check() -> dict:
 
 
 def _profile_aware_report_check() -> dict:
+    """确认调研档位报告护栏和教学拆解专用章节仍然存在。"""
+
+    # 固定章节由所有 profile 共享；动态章节则随 profile 配置变化。
     required_static_sections = {"调研 Profile", "资料包摘要"}
     configured_static_sections = set(PROFILE_AWARE_SECTION_HEADINGS)
     missing_static_sections = sorted(
@@ -83,6 +102,7 @@ def _profile_aware_report_check() -> dict:
         for profile in list_research_profiles()
         if not profile.report_sections
     ]
+    # 教学拆解最容易在重构报告渲染时丢失专属章节，因此额外做精确检查。
     teaching_profile = next(
         (
             profile
@@ -121,6 +141,14 @@ def _profile_aware_report_check() -> dict:
 
 
 def _evaluate_scan_case(case: EvaluationCase, scan_result: dict) -> dict:
+    """根据 fixture 类型检查只读扫描结果，并返回统一 case 结果。
+
+    扫描类用例只验证确定性能力：文件是否进入 file_tree、入口是否识别、
+    README 是否存在，以及敏感路径是否只记录在 skipped_items。它们不调用 LLM，
+    也不评价真实仓库的调研质量。
+    """
+
+    # file_tree 同时包含目录和文件，后续判断实际扫描文件时需要过滤 kind。
     file_paths = {
         item["path"] for item in scan_result["file_tree"] if item.get("kind") == "file"
     }
@@ -191,6 +219,7 @@ def _evaluate_scan_case(case: EvaluationCase, scan_result: dict) -> dict:
     actual_check_names = {check["name"] for check in checks}
     missing_checks = sorted(expected_check_names - actual_check_names)
     unexpected_checks = sorted(actual_check_names - expected_check_names)
+    # 某个 check 通过但名称被意外改写时，仍应视为契约回归，因此同时比较名称集合。
     check_names_match = not missing_checks and not unexpected_checks
 
     return {
@@ -206,6 +235,11 @@ def _evaluate_scan_case(case: EvaluationCase, scan_result: dict) -> dict:
 
 
 def build_summary(results: list[dict]) -> dict:
+    """汇总总数、case_type 维度和调研 profile 维度的通过/失败数量。
+
+    同一份结果会同时用于总览和前端分组展示；这里只聚合，不修改原始 case 结果。
+    """
+
     passed = sum(1 for result in results if result["passed"])
     failed = len(results) - passed
     by_type: dict[str, dict[str, int]] = {}
@@ -233,6 +267,13 @@ def build_summary(results: list[dict]) -> dict:
 def run_evaluations(
     session: Session, *, workspace_root: Path | None = None
 ) -> EvaluationRun:
+    """运行全部评估用例，并持久化一条 ``EvaluationRun``。
+
+    ``workspace_root`` 只用于测试或需要保留 fixture 的调试场景。正常 API 调用
+    不传该参数时会创建临时目录，评估结束后自动清理，避免 fixture 污染正式
+    workspace。
+    """
+
     workspace_context = (
         nullcontext(workspace_root)
         if workspace_root is not None
@@ -240,11 +281,19 @@ def run_evaluations(
     )
 
     with workspace_context as active_workspace:
+        # TemporaryDirectory/nullcontext 都返回可直接转成 Path 的路径，后续逻辑无需区分来源。
         root = Path(active_workspace).resolve()
         return _run_evaluations_in_workspace(session, root)
 
 
 def _run_evaluations_in_workspace(session: Session, root: Path) -> EvaluationRun:
+    """在给定工作区中执行 case 循环，并写入最终评估状态。
+
+    先创建 ``running`` 记录并 flush，再执行用例。全部用例结束后一次性写入
+    summary、case results、终态和完成时间，最后 commit。若用例代码抛异常，
+    由调用方的事务边界负责回滚。
+    """
+
     root.mkdir(parents=True, exist_ok=True)
 
     run = EvaluationRun(status="running", summary_json={}, case_results_json=[])
@@ -253,6 +302,7 @@ def _run_evaluations_in_workspace(session: Session, root: Path) -> EvaluationRun
 
     results = []
     for case in evaluation_cases():
+        # 配置层出现未知类型时保留该 case 的失败结果，继续评估其余用例。
         if case.case_type not in KNOWN_CASE_TYPES:
             results.append(_unknown_case_type_result(case))
             continue
@@ -261,12 +311,15 @@ def _run_evaluations_in_workspace(session: Session, root: Path) -> EvaluationRun
         case_root = write_case_repo(root, case)
         scan_result = _scan_case(case_root)
         if case.case_type == "scan_regression":
+            # 扫描回归只检查文件级事实，不构造完整 Analysis Package。
             results.append(_evaluate_scan_case(case, scan_result))
         else:
+            # profile benchmark 会继续执行质量评分、verifier 和报告章节校验。
             results.append(evaluate_profile_benchmark(case, scan_result))
 
     run.summary_json = build_summary(results)
     run.case_results_json = results
+    # 任一 case 失败都会把整次评估标记为 failed，便于 CI 和页面快速判断。
     run.status = "succeeded" if run.summary_json["failed"] == 0 else "failed"
     run.completed_at = utc_now()
 

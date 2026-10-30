@@ -1,3 +1,5 @@
+"""崩溃 worker 的 stale job 恢复和重新执行测试。"""
+
 from app.workers.run_worker import run_one_job
 from tests.test_runs_api import build_client, create_collected_project
 

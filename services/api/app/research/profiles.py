@@ -1,24 +1,41 @@
+"""调研档位定义与注册表。
+
+调研档位决定一次项目分析的检查清单、质量评分权重、验证器检查和报告章节。
+这些配置是确定性业务规则，不依赖数据库，也不包含供应商相关的模型参数。
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 
+# 项目未指定档位或指定了未知 key 时使用的默认调研目标。
 DEFAULT_RESEARCH_PROFILE = "quick_onboarding"
 
 
 @dataclass(frozen=True)
 class ResearchProfile:
+    """一种调研目标的不可变配置。"""
+
+    # 稳定 key 用于持久化和接口传参，label 仅用于人类阅读。
     key: str
     label: str
     description: str
+    # 分析过程中需要逐项回答的检查清单。
     checklist: list[str]
+    # 六维质量评分的权重，正常配置下总和应为 1。
     quality_weights: dict[str, float]
+    # 该档位要求的确定性验证项。
     verifier_checks: list[str]
+    # 最终报告需要包含的档位专属章节。
     report_sections: list[str]
+    # 形成结论前必须覆盖的证据类别。
     required_evidence_types: list[str]
 
 
+# 注册表是项目调研策略的唯一事实来源；新增档位时必须同时维护完整字段。
 PROFILE_REGISTRY: dict[str, ResearchProfile] = {
+    # 面向新成员快速接手，优先覆盖项目用途、入口、依赖和阅读路线。
     "quick_onboarding": ResearchProfile(
         key="quick_onboarding",
         label="快速接手",
@@ -43,6 +60,7 @@ PROFILE_REGISTRY: dict[str, ResearchProfile] = {
         report_sections=["新人接手路径", "30 分钟阅读路线"],
         required_evidence_types=["source", "codebase", "readme"],
     ),
+    # 面向架构评审，侧重模块边界、主流程、外部依赖和扩展点。
     "architecture_understanding": ResearchProfile(
         key="architecture_understanding",
         label="架构理解",
@@ -66,6 +84,7 @@ PROFILE_REGISTRY: dict[str, ResearchProfile] = {
         report_sections=["模块边界", "主流程与数据流", "扩展点"],
         required_evidence_types=["codebase", "dependency", "entrypoint"],
     ),
+    # 面向二次开发评估，提高证据、风险和问题关闭率的权重。
     "extension_evaluation": ResearchProfile(
         key="extension_evaluation",
         label="二开评估",
@@ -89,6 +108,7 @@ PROFILE_REGISTRY: dict[str, ResearchProfile] = {
         report_sections=["二开可行性", "改造风险", "测试与配置复杂度"],
         required_evidence_types=["codebase", "test", "config"],
     ),
+    # 面向教学拆解，要求形成章节顺序、关键代码讲解和练习任务。
     "teaching_breakdown": ResearchProfile(
         key="teaching_breakdown",
         label="教学拆解",
@@ -112,6 +132,7 @@ PROFILE_REGISTRY: dict[str, ResearchProfile] = {
         report_sections=["课程章节建议", "关键代码讲解顺序", "练习任务"],
         required_evidence_types=["codebase", "entrypoint", "test"],
     ),
+    # 面向交付验收，侧重完整性、可启动性、文档缺口和待确认问题。
     "delivery_acceptance": ResearchProfile(
         key="delivery_acceptance",
         label="交付验收",
@@ -139,12 +160,18 @@ PROFILE_REGISTRY: dict[str, ResearchProfile] = {
 
 
 def list_research_profiles() -> list[ResearchProfile]:
+    """按注册顺序返回全部调研档位，供接口和评测列举使用。"""
+
     return list(PROFILE_REGISTRY.values())
 
 
 def get_research_profile(key: str | None) -> ResearchProfile:
+    """按 key 获取调研档位；缺失或未知 key 都回退到默认档位。"""
+
     return PROFILE_REGISTRY.get(key or DEFAULT_RESEARCH_PROFILE) or PROFILE_REGISTRY[DEFAULT_RESEARCH_PROFILE]
 
 
 def research_profile_exists(key: str) -> bool:
+    """判断项目提交的调研档位 key 是否已注册。"""
+
     return key in PROFILE_REGISTRY

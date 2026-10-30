@@ -1,3 +1,5 @@
+"""LLM 报告片段校验、证据约束和 Markdown 渲染测试。"""
+
 import json
 from collections.abc import Generator
 from contextlib import contextmanager

@@ -1,3 +1,5 @@
+"""带长度上限的本地文本和 PDF 只读摘录工具。"""
+
 from pathlib import Path
 
 from app.tools.path_policy import should_skip_path

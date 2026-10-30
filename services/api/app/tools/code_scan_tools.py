@@ -1,3 +1,5 @@
+"""只读代码库扫描：识别技术栈、入口、配置、测试和关键文件。"""
+
 from pathlib import Path
 from os import walk
 

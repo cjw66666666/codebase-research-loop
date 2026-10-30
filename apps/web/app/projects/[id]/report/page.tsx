@@ -1,3 +1,6 @@
+/**
+ * 项目报告页：生成、比较、审查和导出 Project Research Package。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WorkbenchNav } from "@/components/workbench-nav";

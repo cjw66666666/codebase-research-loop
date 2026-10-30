@@ -1,3 +1,5 @@
+"""LangGraph 九节点 Loop Engine 的状态定义、图构建和执行入口。"""
+
 from __future__ import annotations
 
 import json
@@ -277,7 +279,7 @@ def llm_analyze_sources_node(state: LoopGraphState) -> dict[str, Any]:
         {
             "role": "system",
             "content": (
-                "你是 Loop Engineering 的智能分析增强节点。只输出一个 JSON 对象，不要使用 Markdown。"
+                "你是 Codebase Research Loop 的智能分析增强节点。只输出一个 JSON 对象，不要使用 Markdown。"
                 "只能基于用户提供的上下文和已有证据，不要编造证据、文件、指标或外部事实。"
                 "引用已有证据时必须使用现有 client_ref；如果需要新增派生证据，client_ref 必须以 llm: 开头。"
             ),
@@ -540,7 +542,7 @@ def llm_verify_package_node(state: LoopGraphState) -> dict[str, Any]:
         {
             "role": "system",
             "content": (
-                "你是 Loop Engineering 的 LLM 辅助复核节点。只输出一个 JSON 对象，不要使用 Markdown。"
+                "你是 Codebase Research Loop 的 LLM 辅助复核节点。只输出一个 JSON 对象，不要使用 Markdown。"
                 "确定性校验已经完成，你只能提供第二意见、风险提醒和下一步建议，不能覆盖确定性阻塞结论。"
                 "不要编造上下文中不存在的证据、文件、指标或外部事实。"
             ),

@@ -1,3 +1,5 @@
+"""基于已采集事实生成确定性 Analysis Package 的基线分析器。"""
+
 def evidence_id(seed: str) -> str:
     return f"evidence:{seed}"
 

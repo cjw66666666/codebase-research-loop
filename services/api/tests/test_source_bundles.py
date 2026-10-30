@@ -1,3 +1,5 @@
+"""资料包创建、条目去重和采集状态汇总测试。"""
+
 from pathlib import Path
 
 from sqlalchemy import func, select

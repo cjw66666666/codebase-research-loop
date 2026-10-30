@@ -1,3 +1,5 @@
+"""报告 Markdown 渲染辅助函数和调研档位章节测试。"""
+
 from app.reports.renderer import join_values, profile_section_body, render_profile_architecture_items
 
 

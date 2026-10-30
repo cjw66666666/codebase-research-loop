@@ -1,3 +1,5 @@
+"""v4 工具调用和运行时加固模型迁移兼容性测试。"""
+
 import importlib
 from collections.abc import Iterator
 from contextlib import contextmanager

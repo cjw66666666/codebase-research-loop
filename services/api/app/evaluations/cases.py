@@ -1,3 +1,5 @@
+"""确定性评估用例定义，以及用于扫描回归的临时 fixture 仓库。"""
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from shutil import rmtree
@@ -5,19 +7,41 @@ from shutil import rmtree
 
 @dataclass(frozen=True)
 class EvaluationCase:
+    """一个确定性评估用例的声明，不包含执行状态。
+
+    用例对象只描述“应该生成什么输入、应该出现哪些检查”，实际扫描、评分和
+    verifier 结果由 runner/benchmark 生成。``frozen=True`` 防止运行期间被
+    意外修改，保证同一批结果可复现。
+    """
+
+    # case_id 同时决定临时目录名和 fixture 内容分支，必须在评估集合内唯一。
     case_id: str
+    # description 会写入评估结果，供页面和失败日志直接说明测试目的。
     description: str
+    # expected_checks 是完整检查名称契约，多一个或少一个都会被视为回归。
     expected_checks: list[str]
+    # scan_regression 只扫描 fixture；profile_benchmark 会构造分析包并运行 verifier。
     case_type: str = "scan_regression"
+    # profile benchmark 使用的调研档位 key；扫描回归保持为空。
     research_profile: str | None = None
+    # verifier 中预期通过的 profile:* 检查名称。
     expected_profile_checks: list[str] = field(default_factory=list)
+    # 渲染后的 Markdown 必须包含的二级标题。
     expected_report_sections: list[str] = field(default_factory=list)
+    # 资料包摘要的预期状态，例如 collected。
     expected_bundle_status: str | None = None
 
 
 def evaluation_cases() -> list[EvaluationCase]:
-    # 这些 case 是确定性回归样例，用来证明 runtime 基础扫描能力稳定，不代表真实 benchmark。
+    """返回内置评估用例集合。
+
+    这些 case 是确定性回归样例，用来证明 runtime 基础扫描、报告章节和调研档位
+    契约稳定，不代表对真实仓库质量的人工评分。
+    """
+
+    # 前三个 case 覆盖只读扫描边界：正常仓库、缺少文档、敏感文件跳过。
     return [
+        # 健康样例：证明 README、入口文件、依赖标记和固定报告章节都能被识别。
         EvaluationCase(
             case_id="healthy-small",
             description="包含 README、入口文件和 Python 项目标记的健康小仓库。",
@@ -29,6 +53,7 @@ def evaluation_cases() -> list[EvaluationCase]:
                 "profile_aware_report_sections",
             ],
         ),
+        # 缺文档样例：缺 README 应被记录为 finding，而不是让扫描整流失败。
         EvaluationCase(
             case_id="missing-docs",
             description="只有代码文件、没有 README 的仓库，用来确认缺文档会被稳定识别。",
@@ -39,6 +64,7 @@ def evaluation_cases() -> list[EvaluationCase]:
                 "profile_aware_report_sections",
             ],
         ),
+        # 敏感文件样例：.env 只能进入 skipped_items，不能进入可展示的 file_tree。
         EvaluationCase(
             case_id="sensitive-skip",
             description="包含 README 和 .env 的仓库，用来确认敏感路径只进入 skipped_items。",
@@ -50,6 +76,7 @@ def evaluation_cases() -> list[EvaluationCase]:
                 "profile_aware_report_sections",
             ],
         ),
+        # 后五个 case 分别验证不同调研档位的专属 finding、风险、报告章节和 bundle 状态。
         EvaluationCase(
             case_id="profile-quick-onboarding",
             description="快速接手调研档位基准评估：验证入口、依赖和阅读路径。",
@@ -164,15 +191,26 @@ def evaluation_cases() -> list[EvaluationCase]:
 
 
 def write_case_repo(root: Path, case: EvaluationCase) -> Path:
+    """在指定评估工作区中重建一个 case 的 fixture 仓库。
+
+    每次执行都先删除同名旧目录，再按 case_id 写入固定文件，避免上一次运行产生的
+    文件残留影响结果。返回值是已经创建好的 case 根目录。
+
+    安全约束：删除目标必须位于传入的 ``root`` 下，防止 case_id 被异常值污染时
+    删除工作区之外的目录。
+    """
+
     root = root.resolve()
     case_root = (root / case.case_id).resolve()
     if case_root.exists():
+        # 只允许递归删除评估工作区的直接子目录；其他路径一律拒绝。
         if root not in case_root.parents:
             raise ValueError(f"Refusing to reset evaluation case outside workspace: {case_root}")
         rmtree(case_root)
     case_root.mkdir(parents=True, exist_ok=True)
 
     if case.case_id == "healthy-small":
+        # 最小健康仓库：README 提供说明，app.py 提供入口，pyproject.toml 提供技术栈线索。
         (case_root / "README.md").write_text(
             "# Healthy Small\n\nA tiny deterministic Python fixture.\n",
             encoding="utf-8",
@@ -188,6 +226,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "missing-docs":
+        # 只保留代码文件，确保扫描器在缺少 README 时仍能读取并统计源码。
         (case_root / "app.py").write_text(
             "def handler() -> str:\n    return 'missing docs still scans'\n",
             encoding="utf-8",
@@ -195,6 +234,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "sensitive-skip":
+        # .env 内容只是测试占位符；关键是扫描器必须跳过而不是读取或展示它。
         (case_root / "README.md").write_text(
             "# Sensitive Skip\n\nThe scanner must skip local secrets.\n",
             encoding="utf-8",
@@ -206,6 +246,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "profile-quick-onboarding":
+        # 快速接手需要入口、依赖、测试和可读取的 run 线索，才能形成阅读路径。
         (case_root / "tests").mkdir()
         (case_root / "README.md").write_text(
             "# Quick Onboarding Fixture\n\nRun with `python app.py` after installing dependencies.\n",
@@ -226,6 +267,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "profile-architecture-understanding":
+        # 用 API、services、UI、config 四个目录制造可识别的模块边界和调用层次。
         (case_root / "api").mkdir()
         (case_root / "services").mkdir()
         (case_root / "ui").mkdir()
@@ -264,6 +306,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "profile-extension-evaluation":
+        # 二开评估需要依赖/配置/测试线索，以及可引用的风险登记和缓解建议。
         (case_root / "tests").mkdir()
         (case_root / "README.md").write_text(
             "# Extension Evaluation Fixture\n\n"
@@ -290,6 +333,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "profile-teaching-breakdown":
+        # 教学拆解需要入口、可讲解服务文件、测试和明确的学习/练习路径。
         (case_root / "lesson").mkdir()
         (case_root / "tests").mkdir()
         (case_root / "README.md").write_text(
@@ -317,6 +361,7 @@ def write_case_repo(root: Path, case: EvaluationCase) -> Path:
         return case_root
 
     if case.case_id == "profile-delivery-acceptance":
+        # 交付验收需要 README runbook、入口、配置样例、测试和可回答的交接问题。
         (case_root / "tests").mkdir()
         (case_root / "README.md").write_text(
             "# Delivery Acceptance Fixture\n\n"

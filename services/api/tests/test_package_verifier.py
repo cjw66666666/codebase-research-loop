@@ -1,3 +1,5 @@
+"""Analysis Package 确定性校验规则和报告可审查性测试。"""
+
 from types import SimpleNamespace
 
 from app.reports.renderer import render_report_markdown
@@ -173,7 +175,7 @@ def test_missing_source_snapshots_blocks_verification():
 def test_render_report_markdown_includes_verifier_findings_and_evidence():
     project = item(
         id="project-1",
-        name="Loop Engineering Runtime",
+        name="Codebase Research Runtime",
         topic="Analyze a loop runtime project",
         analysis_goal="Decide whether to proceed to productization.",
         status="ready_for_review",
@@ -184,7 +186,7 @@ def test_render_report_markdown_includes_verifier_findings_and_evidence():
 
     markdown = render_report_markdown(project, package, inventory, verifier_result)
 
-    assert "# Loop Engineering Runtime 项目调研报告" in markdown
+    assert "# Codebase Research Runtime 项目调研报告" in markdown
     assert "## 校验摘要" in markdown
     assert "Runtime boundary is clear" in markdown
     assert "Source inventory" in markdown
@@ -196,7 +198,7 @@ def test_render_report_markdown_includes_verifier_findings_and_evidence():
 def test_render_report_markdown_includes_v3_enhanced_sections():
     project = item(
         id="project-1",
-        name="Loop Engineering Runtime",
+        name="Codebase Research Runtime",
         topic="Analyze a loop runtime project",
         analysis_goal="Decide whether to proceed to productization.",
         status="ready_for_review",
@@ -241,7 +243,7 @@ def test_render_report_markdown_includes_v3_enhanced_sections():
 def test_render_report_markdown_handles_empty_llm_assisted_result_safely():
     project = item(
         id="project-1",
-        name="Loop Engineering Runtime",
+        name="Codebase Research Runtime",
         topic="Analyze a loop runtime project",
         analysis_goal="Decide whether to proceed to productization.",
         status="ready_for_review",

@@ -1,3 +1,5 @@
+"""OpenAI-compatible provider 请求和响应解析测试。"""
+
 import json
 
 import httpx

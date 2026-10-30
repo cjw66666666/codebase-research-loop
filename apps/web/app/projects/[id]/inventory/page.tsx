@@ -1,3 +1,6 @@
+/**
+ * 输入源清单页：展示采集快照、跳过的文件，并触发项目级采集。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WorkbenchNav } from "@/components/workbench-nav";

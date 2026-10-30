@@ -1,3 +1,5 @@
+"""只读工具注册信息和运行工具调用审计接口。"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -23,6 +25,9 @@ def list_run_tool_calls(
     run_id: str,
     session: Session = Depends(get_session),
 ) -> list[ToolCall]:
+    """返回指定运行产生的工具调用记录。"""
+
+    # 先校验项目，再校验 run 的项目归属，避免通过 run_id 跨项目读取审计记录。
     project = session.get(Project, project_id)
     if project is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -30,6 +35,7 @@ def list_run_tool_calls(
     if run is None or run.project_id != project.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
 
+    # 调用账本按发生顺序返回，前端可据此还原 Agent 的工具使用轨迹。
     return list(
         session.scalars(
             select(ToolCall)

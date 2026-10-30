@@ -1,4 +1,7 @@
-"""initial schema
+"""initial schema（项目、审计和输入源基础表）
+
+建立 Loop Assistant 最早的业务骨架：项目是聚合根，输入源保存原始位置，
+审计事件记录关键动作。后续迁移在此基础上扩展采集、运行和报告能力。
 
 Revision ID: 20260630_0001
 Revises:
@@ -19,6 +22,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # 项目是后续输入源、运行、报告和审计记录的共同归属。
     op.create_table(
         "projects",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -31,6 +35,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
+    # 审计事件既支持项目级事件，也允许 project_id 为空以记录系统级动作。
     op.create_table(
         "audit_events",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -45,6 +50,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_audit_events_project_id"), "audit_events", ["project_id"], unique=False)
+    # 输入源同时保留用户原始 uri 和去重、采集使用的 normalized_uri。
     op.create_table(
         "sources",
         sa.Column("id", sa.String(length=36), nullable=False),
@@ -63,6 +69,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # 按外键依赖逆序删除，先移除引用项目的表，再删除项目本身。
     op.drop_index(op.f("ix_sources_project_id"), table_name="sources")
     op.drop_table("sources")
     op.drop_index(op.f("ix_audit_events_project_id"), table_name="audit_events")

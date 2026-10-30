@@ -1,3 +1,6 @@
+/**
+ * 前端调研档位模板：为新建项目提供目标提示和默认分析目标。
+ */
 export type ResearchTemplateKey =
   | "quick_onboarding"
   | "architecture_understanding"

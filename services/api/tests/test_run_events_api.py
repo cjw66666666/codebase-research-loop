@@ -1,3 +1,5 @@
+"""运行事件列表和 SSE 接口测试。"""
+
 from app.workers.run_worker import run_one_job
 from tests.test_run_streaming_api import parse_sse_frames
 from tests.test_runs_api import build_client, create_collected_project

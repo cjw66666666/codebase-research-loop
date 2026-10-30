@@ -1,3 +1,5 @@
+"""OpenAI-compatible Chat Completions 客户端适配层。"""
+
 from urllib.parse import urljoin
 
 import httpx

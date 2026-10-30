@@ -1,3 +1,6 @@
+/**
+ * 项目列表页：汇总状态、评分入口，并提供本地代码分析 Demo。
+ */
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createCodeAnalysisDemoProject, listProjects } from "@/lib/api";
@@ -39,7 +42,7 @@ export default async function ProjectsPage() {
       <div className="toolbar">
         <div>
           <h1>工程调研工作台</h1>
-          <p className="meta">Project Research Loop Assistant</p>
+          <p className="meta">Codebase Research Loop</p>
           <p className="muted">从输入源、采集、调研过程、证据、风险到调研报告，跟踪每个项目调研包的闭环状态。</p>
         </div>
         <div className="toolbar-actions">
